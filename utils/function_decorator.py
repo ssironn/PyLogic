@@ -6,7 +6,8 @@ class LogicOperator:
         self.mapping = {
             '__add__': 'v',
             '__mul__': '^',
-            '__invert__': '¬'
+            '__invert__': '¬',
+            '__rshift__': '→'
         }
 
     def __call__(self, *args, **kwargs):

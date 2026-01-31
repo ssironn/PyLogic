@@ -186,10 +186,8 @@ def _verificar_equivalencia_semantica(prop1, props1, prop2, props2):
 
 def _avaliar_prop(prop):
     """Avalia uma proposição."""
-    if prop is TRUE:
-        return True
-    if prop is FALSE:
-        return False
+    if hasattr(prop, 'is_constant') and prop.is_constant():
+        return prop.is_true()
     if isinstance(prop, Proposition):
         return prop.value
     elif isinstance(prop, CompoundProposition):

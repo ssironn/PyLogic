@@ -551,26 +551,27 @@ class Equivalence:
     def _is_true_constant(self, node) -> bool:
         """Check if node represents the True constant."""
         if isinstance(node, AtomicNode):
-            return isinstance(node.proposition, TruthConstant) and node.proposition.is_true()
-        if isinstance(node, TruthConstant):
-            return node.is_true()
-        if isinstance(node, Proposition) and isinstance(node, TruthConstant):
+            prop = node.proposition
+            return hasattr(prop, 'is_constant') and prop.is_constant() and prop.is_true()
+        if hasattr(node, 'is_constant') and node.is_constant():
             return node.is_true()
         return False
 
     def _is_false_constant(self, node) -> bool:
         """Check if node represents the False constant."""
         if isinstance(node, AtomicNode):
-            return isinstance(node.proposition, TruthConstant) and node.proposition.is_false()
-        if isinstance(node, TruthConstant):
-            return node.is_false()
-        if isinstance(node, Proposition) and isinstance(node, TruthConstant):
+            prop = node.proposition
+            return hasattr(prop, 'is_constant') and prop.is_constant() and prop.is_false()
+        if hasattr(node, 'is_constant') and node.is_constant():
             return node.is_false()
         return False
 
     def _is_constant(self, node) -> bool:
         """Check if node is a truth constant (T or F)."""
-        return self._is_true_constant(node) or self._is_false_constant(node)
+        if isinstance(node, AtomicNode):
+            prop = node.proposition
+            return hasattr(prop, 'is_constant') and prop.is_constant()
+        return hasattr(node, 'is_constant') and node.is_constant()
 
     def check_identity(self, proposition: CompoundProposition) -> bool:
         """

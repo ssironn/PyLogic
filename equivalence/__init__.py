@@ -1017,16 +1017,11 @@ class Equivalence:
         """Ensure the proposition is a CompoundProposition."""
         if isinstance(prop, CompoundProposition):
             return prop
-        elif isinstance(prop, TruthConstant):
-            # TruthConstant is a special Proposition
-            cp = CompoundProposition()
-            cp.root = AtomicNode(prop)
-            cp.components = set()  # Constants don't count as regular components
-            return cp
         elif isinstance(prop, Proposition):
             cp = CompoundProposition()
             cp.root = AtomicNode(prop)
-            cp.components = {prop}
+            # Constants don't count as regular components
+            cp.components = set() if prop.is_constant() else {prop}
             return cp
         raise TypeError(f"Expected Proposition or CompoundProposition, got {type(prop)}")
 

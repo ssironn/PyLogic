@@ -99,14 +99,24 @@ def train_model(verbose=True):
     return convergence_model, simplification_model
 
 
+def _is_true_constant(prop):
+    """Check if a proposition is the True constant."""
+    return prop is TRUE or (hasattr(prop, 'is_constant') and prop.is_constant() and prop.is_true())
+
+
+def _is_false_constant(prop):
+    """Check if a proposition is the False constant."""
+    return prop is FALSE or (hasattr(prop, 'is_constant') and prop.is_constant() and prop.is_false())
+
+
 def check_semantic_equivalence(prop1, props1, prop2, props2):
     """
     Check if two propositions are semantically equivalent by checking
     all possible truth value combinations.
     """
     # Handle truth constants directly
-    if prop1 is TRUE or (hasattr(prop1, 'is_constant') and prop1.is_constant() and prop1.is_true()):
-        if prop2 is TRUE or (hasattr(prop2, 'is_constant') and prop2.is_constant() and prop2.is_true()):
+    if _is_true_constant(prop1):
+        if _is_true_constant(prop2):
             return True
         # prop1 is T, prop2 is something else - check if prop2 is always True
         all_names = set(props2.keys())
@@ -119,8 +129,8 @@ def check_semantic_equivalence(prop1, props1, prop2, props2):
                 return False
         return True
 
-    if prop1 is FALSE or (hasattr(prop1, 'is_constant') and prop1.is_constant() and prop1.is_false()):
-        if prop2 is FALSE or (hasattr(prop2, 'is_constant') and prop2.is_constant() and prop2.is_false()):
+    if _is_false_constant(prop1):
+        if _is_false_constant(prop2):
             return True
         # prop1 is F, prop2 is something else - check if prop2 is always False
         all_names = set(props2.keys())
@@ -167,10 +177,8 @@ def check_semantic_equivalence(prop1, props1, prop2, props2):
 
 def evaluate_prop(prop):
     """Evaluate a proposition (handles both Proposition and CompoundProposition)."""
-    if prop is TRUE:
-        return True
-    if prop is FALSE:
-        return False
+    if hasattr(prop, 'is_constant') and prop.is_constant():
+        return prop.is_true()
     if isinstance(prop, Proposition):
         return prop.value
     elif isinstance(prop, CompoundProposition):

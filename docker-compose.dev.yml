@@ -1,0 +1,119 @@
+version: '3.8'
+
+# Docker Compose para desenvolvimento com Live Reload
+# ============================================================
+#
+# Uso:
+#   docker-compose -f docker-compose.dev.yml up
+#
+# Para rebuild:
+#   docker-compose -f docker-compose.dev.yml up --build
+#
+# Criar admin padrão:
+#   docker-compose -f docker-compose.dev.yml exec backend flask seed-admin
+#
+# ============================================================
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: pylogic-mysql-dev
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: pylogic
+      MYSQL_USER: pylogic
+      MYSQL_PASSWORD: pylogic
+    volumes:
+      - mysql_data_dev:/var/lib/mysql
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: pylogic-backend-dev
+    ports:
+      - "9000:5000"
+    environment:
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - PYTHONUNBUFFERED=1
+      - DATABASE_URL=mysql+pymysql://pylogic:pylogic@mysql:3306/pylogic?charset=utf8mb4
+      - DATABASE_HOST=mysql
+      - MYSQL_USER=pylogic
+      - MYSQL_PASSWORD=pylogic
+      - SECRET_KEY=dev-secret-key
+      - JWT_SECRET_KEY=dev-jwt-secret-key
+      - YOUTUBE_API_KEY=AIzaSyCPfcGW5_AeKE6syT3KMbNvd2SwcqbtQhc
+    volumes:
+      # Monta o código para live reload do backend
+      - ./backend:/app
+      # Preserva os pacotes instalados
+      - /app/deps
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: pylogic-frontend-dev
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
+      - NEXT_PUBLIC_API_URL=http://localhost:9000
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - ./frontend/next.config.js:/app/next.config.js
+      - ./frontend/tsconfig.json:/app/tsconfig.json
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+
+  frontend-admin:
+    build:
+      context: ./frontend-admin
+      dockerfile: Dockerfile.dev
+    container_name: pylogic-admin-dev
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
+      - NEXT_PUBLIC_API_URL=http://localhost:9000
+    volumes:
+      - ./frontend-admin/src:/app/src
+      - ./frontend-admin/public:/app/public
+      - ./frontend-admin/next.config.js:/app/next.config.js
+      - ./frontend-admin/tsconfig.json:/app/tsconfig.json
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend
+    restart: unless-stopped
+    stdin_open: true
+    tty: true
+
+volumes:
+  mysql_data_dev:

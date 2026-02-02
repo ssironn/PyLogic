@@ -1,0 +1,90 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: pylogic-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-pylogic}
+      MYSQL_USER: ${MYSQL_USER:-pylogic}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-pylogic}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpassword}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pylogic-backend
+    ports:
+      - "9000:5000"
+    environment:
+      - FLASK_ENV=production
+      - PYTHONUNBUFFERED=1
+      - DATABASE_URL=mysql+pymysql://${MYSQL_USER:-pylogic}:${MYSQL_PASSWORD:-pylogic}@mysql:3306/${MYSQL_DATABASE:-pylogic}?charset=utf8mb4
+      - SECRET_KEY=${SECRET_KEY:-change-this-in-production}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-change-this-in-production}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/docs"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=http://localhost:9000
+    container_name: pylogic-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://localhost:9000
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+
+# ============================================================
+# INSTRUÇÕES DE USO
+# ============================================================
+#
+# Primeira execução (cria banco e tabelas):
+#   docker-compose up --build
+#
+# Executar em segundo plano:
+#   docker-compose up -d
+#
+# Criar admin padrão (admin@email.com / admin):
+#   docker-compose exec backend flask seed-admin
+#
+# Ver logs:
+#   docker-compose logs -f
+#
+# Parar serviços:
+#   docker-compose down
+#
+# Parar e remover volumes (APAGA DADOS):
+#   docker-compose down -v
+#
+# ============================================================

@@ -1,0 +1,68 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+}
+
+html {
+  overflow-y: scroll;
+}
+
+body {
+  background-color: #050508;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+#__next {
+  min-height: 100vh;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.5);
+}
+
+/* Proposition symbols styling */
+.proposition-symbol {
+  font-family: 'Cambria Math', 'Times New Roman', serif;
+  font-size: 1.1em;
+}
+
+.symbol-and { color: #f59e0b; }
+.symbol-or { color: #3b82f6; }
+.symbol-not { color: #ef4444; }
+.symbol-implies { color: #22c55e; }
+.symbol-true { color: #22c55e; font-weight: bold; }
+.symbol-false { color: #ef4444; font-weight: bold; }
+.symbol-var { color: #a78bfa; }
+.symbol-paren { color: #94a3b8; }

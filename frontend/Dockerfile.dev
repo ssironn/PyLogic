@@ -1,0 +1,44 @@
+# PyLogic Frontend - Development Dockerfile with Live Reload
+# ============================================================
+#
+# Este Dockerfile é para desenvolvimento com hot reload.
+#
+# Uso:
+#   docker build -f Dockerfile.dev -t pylogic-frontend-dev ./frontend
+#   docker run -p 3000:3000 -v $(pwd)/frontend/src:/app/src pylogic-frontend-dev
+#
+# Ou com docker-compose:
+#   docker-compose -f docker-compose.dev.yml up
+#
+# ============================================================
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copia package.json primeiro
+COPY package*.json ./
+
+# Instala dependências
+RUN npm install
+
+# Copia configurações (não o src, que será montado como volume)
+COPY next.config.js ./
+COPY tsconfig.json ./
+COPY .eslintrc.json ./
+
+# Copia o resto dos arquivos
+COPY . .
+
+# Ambiente de desenvolvimento
+ENV NODE_ENV=development
+ENV WATCHPACK_POLLING=true
+ENV CHOKIDAR_USEPOLLING=true
+
+ARG NEXT_PUBLIC_API_URL=http://localhost:9000
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
+EXPOSE 3000
+
+# Usa o comando dev para hot reload
+CMD ["npm", "run", "dev"]

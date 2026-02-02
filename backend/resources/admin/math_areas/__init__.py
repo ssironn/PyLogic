@@ -1,0 +1,1 @@
+"""Math Areas admin module."""
